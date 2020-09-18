@@ -34,3 +34,48 @@ body {
 #submitNewThread {
   margin: 50px;
 }
+
+/*index.html*/
+#userstories {
+  margin-left: 5%; 
+  margin-top: 5%;
+}
+
+#testui {
+  margin-left: 5%
+}
+
+hr#first-hr {
+  margin: 50px;
+}
+
+hr#last-hr {
+  margin: 50px;
+  margin-top: 200px;
+}
+
+#testui h2 {
+  text-align: left;
+}
+
+/*board.html*/
+#board-hr {
+  margin: 50px; 
+  margin-top: 200px;
+}
+
+.reported-thread {
+    border: 2px solid red;
+    background-color: rgba(26, 126, 213, 0.5);
+}
+
+.labeled {
+  color: red;
+  font-weight: bold;
+}
+
+/*thread.html*/
+#thread-hr {
+  margin: 50px; 
+  margin-top: 200px;
+}

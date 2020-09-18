@@ -4,6 +4,11 @@ var express     = require('express');
 var bodyParser  = require('body-parser');
 var expect      = require('chai').expect;
 var cors        = require('cors');
+const helmet = require('helmet');
+const dotenv = require('dotenv');
+dotenv.config();
+const mongoose = require('mongoose');
+mongoose.set('useFindAndModify', false);
 
 var apiRoutes         = require('./routes/api.js');
 var fccTestingRoutes  = require('./routes/fcctesting.js');
@@ -17,6 +22,36 @@ app.use(cors({origin: '*'})); //For FCC testing purposes only
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(helmet());
+app.use(helmet.frameguard({action: 'sameorigin'}));
+app.use(
+  helmet.dnsPrefetchControl({
+    allow: true,
+  })
+);
+
+app.use(
+  helmet.contentSecurityPolicy({ 
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://code.jquery.com"],
+      styleSrc: ["'self'"],
+      imgSrc: ["'self'", "https://hyperdev.com/favicon-app.ico", "https://cdn.gomix.com/8f5547a1-a0d6-48f6-aa38-51753a0105f4%2FScreen%20Shot%202017-01-02%20at%201.04.10%20AM.png"]
+    }
+  })
+);
+
+const session = require('express-session');
+app.use(session({secret: 'cleanSecret', resave: false, saveUninitialized: false}));
+
+// Connect to a database
+mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true }); 
+var db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", function() {
+  console.log("Connection Successful!");
+});
 
 //Sample front-end
 app.route('/b/:board/')
