@@ -85,7 +85,7 @@
             type: "PUT",
             url: url,
             data: $(this).serialize(),
-            success: function(data) { alert(data) }
+            success: function(data) { alert(data.message) }
           });
           e.preventDefault();
         });

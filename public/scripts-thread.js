@@ -17,8 +17,11 @@
             // THIS ARRAY SET UP IS FOR CODE READABILITIES AND TESTING!
             // THIS IS NOT WHAT IT WOULD LOOK LIKE TO GO LIVE
             //
-              console.log(ele);//can I use typeScript please?!
-              var thread = ['<div class="thread">'];
+              console.log(ele);
+               var thread = ['<div class="thread">'];
+              if (ele.reported === true) {
+                thread = ['<div class="thread reported-thread">'];
+              }
               thread.push('<div class="main">')
               thread.push('<p class="id">id: '+ele._id+' ('+ele.created_on+')</p>');
               thread.push('<form id="reportThread"><input type="hidden" name="report_id" value="'+ele._id+'"><input type="submit" value="Report"></form>');
@@ -26,7 +29,7 @@
               thread.push('<h3>'+ele.text+'</h3>');
               thread.push('</div><div class="replies">');
               ele.replies.forEach(function(rep) {
-                thread.push('<div class="reply">')
+                thread.push('<div class="reply">');
                 thread.push('<p class="id">id: '+rep._id+' ('+rep.created_on+')</p>');
                 thread.push('<form id="reportReply"><input type="hidden" name="thread_id" value="'+ele._id+'"><input type="hidden" name="reply_id" value="'+rep._id+'"><input type="submit" value="Report"></form>');
                 thread.push('<form id="deleteReply"><input type="hidden" value="'+ele._id+'" name="thread_id" required=""><input type="hidden" value="'+rep._id+'" name="reply_id" required=""><input type="text" placeholder="password" name="delete_password" required=""><input type="submit" value="Delete"></form>');
@@ -65,7 +68,12 @@
             type: "PUT",
             url: url,
             data: $(this).serialize(),
-            success: function(data) { alert(data) }
+            success: function(data) { 
+              if (data.data.reported === true) {
+                e.target.parentNode.className = "reported-reply";
+              }
+              alert(data.message) 
+            }
           });
           e.preventDefault();
         });

@@ -37,7 +37,6 @@ module.exports = function (app) {
      res.redirect(`/b/${board}`);
   })
   .put(function (req, res){
-    console.log(req.body);
     if (req.body.report_id) {
           Thread.findByIdAndUpdate(req.body.report_id, {$set:{reported: true, bumped_on: new Date().toISOString()}}, {new: true}).then(function(data) { 
               res.json({
@@ -77,19 +76,40 @@ module.exports = function (app) {
             });
     await reply.save();
     
-    Thread.findByIdAndUpdate(req.body.thread_id, {$push:
-                                                  {
-                                                    replies: { 
-                                                              _id: reply._id,
-                                                              text: reply.text,
-                                                              password: reply.password,
-                                                              created_on: reply.created_on
-                                                             }
-                                                  }
-                                                 }).then(async function(data) {
-      res.redirect(`/b/${board}/${req.body.thread_id}`);
+    Thread.findByIdAndUpdate(req.body.thread_id, 
+                             {$push:{replies:{ 
+                                                _id: reply._id,
+                                                text: reply.text,
+                                                password: reply.password,
+                                                created_on: reply.created_on
+                                               }
+                                      }
+                              }
+                            ).then(async function(data) {
+       Thread.findByIdAndUpdate(req.body.thread_id, {$set:{bumped_on: new Date().toISOString()}, $inc: {'replycount':1} }, {new: true}).then(function(data){
+         res.redirect(`/b/${board}/${req.body.thread_id}`);
+       });
     });
     
+  })
+  .put(function (req, res) {
+    if (req.body.reply_id) {
+      Reply.findByIdAndUpdate(req.body.reply_id, {$set:{reported: true}}, {new: true}).then(function(data) { 
+              res.json({
+                message: `reply ${req.body.reply_id} reported`,
+                data: data
+              });
+          });
+    }
+  })
+  .delete(function (req, res) {
+       Reply.findByIdAndUpdate(req.body.reply_id, {$set:{text: '[deleted]'}}, {new: true}).then(function(data) {
+            if (req.body.delete_password !== data.password) {
+              res.send('incorrect password');
+            } else if (req.body.delete_password === data.password) {
+              res.send('success');
+            }
+        });
   });
 
 };

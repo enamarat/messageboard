@@ -19,6 +19,7 @@ const replySchema = new Schema({
   created_on: {type: Date},
   text: {type: String},
   password: {type: String},
+  reported: {type: Boolean, default: false},
   thread_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Thread'
