@@ -12,26 +12,37 @@ var expect = require('chai').expect;
 const {Thread} = require('../models/models.js');
 const {Reply} = require('../models/models.js');
 
+const mongoose = require('mongoose');
+const ObjectId = require('mongodb').ObjectID;
+
 module.exports = function (app) {
   
   app.route('/api/threads/:board')
-  .get(function (req, res){
+  .get(async function (req, res){
     const board = req.params.board;
-    
-    Thread.find({board: board}).then(async function(data) { 
-      res.send(data);
+  
+    await Thread.find({board: board}, "_id board text created_on bumped_on replies replycount")
+         .sort({bumped_on: -1}).limit(10)
+         .populate({path: 'replies', 
+                    options: {
+                              limit: 3,
+                              sort: { created_on: -1},
+                             }
+                  }).exec(function(err, docs) { 
+         res.send(docs);
     });
   })
   .post(async function (req, res){
     const board = req.params.board;
 
      const thread = new Thread ({
+            _id: new mongoose.Types.ObjectId(),
              board: board,
              text: req.body.text,
              password: req.body.delete_password,
              created_on: new Date().toISOString(),
-             bumped_on: new Date().toISOString(),
-             replies: []
+             bumped_on: new Date().toISOString()
+            // replies: []
             });
             await thread.save();
      res.redirect(`/b/${board}`);
@@ -40,7 +51,8 @@ module.exports = function (app) {
     if (req.body.report_id) {
           Thread.findByIdAndUpdate(req.body.report_id, {$set:{reported: true, bumped_on: new Date().toISOString()}}, {new: true}).then(function(data) { 
               res.json({
-                message: `thread ${req.body.report_id} reported`,
+               // message: `thread ${req.body.report_id} reported`,
+                message: `successfully reported`,
                 data: data
               });
           });
@@ -60,10 +72,13 @@ module.exports = function (app) {
   });
   
   app.route('/api/replies/:board')
-  .get(function (req, res){
-    Thread.findById(req.query.thread_id).then(async function(data) { 
+  .get(async function (req, res){
+    //as in Mongoose documentation
+    const thread = await Thread.findById(req.query.thread_id);
+    await thread.populate('replies').execPopulate().then(function(data){
       res.send(data);
     });
+    
   })
   .post(async function (req, res){
     const board = req.params.board;
@@ -72,19 +87,14 @@ module.exports = function (app) {
              text: req.body.text,
              password: req.body.delete_password,
              created_on: new Date().toISOString(),
-             thread_id: req.body.thread_id
+             thread_id: ObjectId(req.body.thread_id)
             });
     await reply.save();
     
+
+    // Note to self: you must push ids of replies to the thread (to the "replies" array) before populating "replies" field of the thread. Otherwise, population won't work.
     Thread.findByIdAndUpdate(req.body.thread_id, 
-                             {$push:{replies:{ 
-                                                _id: reply._id,
-                                                text: reply.text,
-                                                password: reply.password,
-                                                created_on: reply.created_on
-                                               }
-                                      }
-                              }
+                             {$push:{replies: reply._id}}
                             ).then(async function(data) {
        Thread.findByIdAndUpdate(req.body.thread_id, {$set:{bumped_on: new Date().toISOString()}, $inc: {'replycount':1} }, {new: true}).then(function(data){
          res.redirect(`/b/${board}/${req.body.thread_id}`);
@@ -96,7 +106,7 @@ module.exports = function (app) {
     if (req.body.reply_id) {
       Reply.findByIdAndUpdate(req.body.reply_id, {$set:{reported: true}}, {new: true}).then(function(data) { 
               res.json({
-                message: `reply ${req.body.reply_id} reported`,
+                message: `reply reported`,
                 data: data
               });
           });
@@ -111,5 +121,6 @@ module.exports = function (app) {
             }
         });
   });
+  
 
 };

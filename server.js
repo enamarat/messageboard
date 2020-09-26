@@ -42,9 +42,6 @@ app.use(
   })
 );
 
-const session = require('express-session');
-app.use(session({secret: 'cleanSecret', resave: false, saveUninitialized: false}));
-
 // Connect to a database
 mongoose.connect(process.env.DB, { useNewUrlParser: true, useUnifiedTopology: true }); 
 var db = mongoose.connection;

@@ -15,7 +15,18 @@
             data: $(this).serialize(),
             success: function(data)
             {
-              alert(data);
+              console.log(data);
+              if (data.data.reported === true) {
+                e.target.parentNode.parentNode.className = "reported-thread";
+              // prevent label "Reported" from being duplicated
+              if (e.target.parentNode.parentNode.querySelector(".labeled") === null) {
+                const p = document.createElement("p");
+                p.className = "labeled";
+                p.textContent = "Reported";
+                e.target.parentNode.appendChild(p);
+              }
+                alert(data.message);
+              }
             }
           });
           e.preventDefault();
@@ -41,7 +52,7 @@
             data: $(this).serialize(),
             success: function(data)
             {
-              alert(data);
+              alert(data.message);
             }
           });
           e.preventDefault();
